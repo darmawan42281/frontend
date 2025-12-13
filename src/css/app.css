@@ -1,0 +1,60 @@
+/* app global css */
+/* Global app styles */
+/* Background lembut untuk seluruh app */
+body {
+  background: #f3f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Biar tiap halaman penuh & scroll halus di mobile */
+.q-page {
+  min-height: 100vh;
+}
+
+/* Kartu rounded yang konsisten di semua halaman */
+.rounded-card {
+  border-radius: 18px;
+}
+
+/* Kartu saldo utama di dashboard */
+.main-balance-card {
+  border-radius: 24px;
+  background: linear-gradient(135deg, #0052a4, #0096ff);
+  color: #fff;
+}
+
+/* Tombol aksi cepat (di dashboard) */
+.quick-action-btn {
+  min-width: 90px;
+  border-radius: 16px;
+}
+
+/* Bottom tab lebih “gemuk” supaya enak di-klik */
+.mobile-bottom-tabs .q-tab__content {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* Hilangkan garis bawaan di header/footer supaya lebih bersih */
+.q-header,
+.q-footer {
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Judul halaman di header */
+.app-header-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/* Subjudul kecil */
+.text-muted {
+  color: #9aa4b2;
+}
+
+/* Helper class untuk teks saldo kecil di kartu akun */
+.account-type-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
