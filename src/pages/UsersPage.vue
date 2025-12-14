@@ -130,6 +130,7 @@
             emit-value
             map-options
           />
+
           <q-input
             v-model="form.password"
             :type="showPassword ? 'text' : 'password'"
@@ -237,7 +238,7 @@ export default {
       this.loading = true
       try {
         const { data } = await api.get('/family-users')
-        this.members = data.data || data || []
+        this.members = data?.data || data || []
       } catch (err) {
         console.error(err)
         this.handleError(err, 'Gagal memuat pengguna')
@@ -274,18 +275,18 @@ export default {
 
     async submitForm () {
       if (!this.form.name || !this.form.email) {
-        Notify.create({
-          type: 'warning',
-          message: 'Nama dan email wajib diisi'
-        })
+        Notify.create({ type: 'warning', message: 'Nama dan email wajib diisi' })
         return
       }
 
       if (this.formMode === 'create' && !this.form.password) {
-        Notify.create({
-          type: 'warning',
-          message: 'Password wajib diisi untuk pengguna baru'
-        })
+        Notify.create({ type: 'warning', message: 'Password wajib diisi untuk pengguna baru' })
+        return
+      }
+
+      // kalau user isi password saat edit/create, minimal 6 (sesuai hint UI)
+      if (this.form.password && this.form.password.length < 6) {
+        Notify.create({ type: 'warning', message: 'Password minimal 6 karakter' })
         return
       }
 
@@ -297,22 +298,18 @@ export default {
           role: this.form.role
         }
 
+        // FIX: jika ada password, kirim juga password_confirmation
         if (this.formMode === 'create' || this.form.password) {
           payload.password = this.form.password
+          payload.password_confirmation = this.form.password
         }
 
         if (this.formMode === 'create') {
           await api.post('/family-users', payload)
-          Notify.create({
-            type: 'positive',
-            message: 'Pengguna berhasil ditambahkan'
-          })
+          Notify.create({ type: 'positive', message: 'Pengguna berhasil ditambahkan' })
         } else {
           await api.put(`/family-users/${this.form.id}`, payload)
-          Notify.create({
-            type: 'positive',
-            message: 'Pengguna berhasil diupdate'
-          })
+          Notify.create({ type: 'positive', message: 'Pengguna berhasil diupdate' })
         }
 
         this.formDialog = false
@@ -337,10 +334,7 @@ export default {
       try {
         await api.delete(`/family-users/${this.selectedMember.id}`)
 
-        Notify.create({
-          type: 'positive',
-          message: 'Pengguna berhasil dihapus'
-        })
+        Notify.create({ type: 'positive', message: 'Pengguna berhasil dihapus' })
 
         this.deleteDialog = false
         this.selectedMember = null
@@ -359,29 +353,33 @@ export default {
       if (status === 401) {
         localStorage.removeItem('token')
         delete api.defaults.headers.common.Authorization
-        Notify.create({
-          type: 'negative',
-          message: 'Sesi habis, silakan login lagi'
-        })
+        Notify.create({ type: 'negative', message: 'Sesi habis, silakan login lagi' })
         this.$router.push({ name: 'login' })
         return
       }
 
       if (status === 403) {
         const msg = err?.response?.data?.message || 'Hanya owner yang boleh mengelola pengguna.'
-        Notify.create({
-          type: 'warning',
-          message: msg
-        })
-        // Balik ke dashboard biar nggak bingung
+        Notify.create({ type: 'warning', message: msg })
         this.$router.push({ name: 'dashboard' })
         return
       }
 
-      const msg = err?.response?.data?.message || fallbackMessage
+      const data = err?.response?.data
+      let msg = data?.message
+
+      // FIX: tampilkan validasi Laravel (errors: {field: [...]})
+      if (!msg && data?.errors) {
+        const messages = []
+        Object.values(data.errors).forEach(v => {
+          if (Array.isArray(v)) messages.push(...v)
+        })
+        msg = messages.join(' • ')
+      }
+
       Notify.create({
         type: 'negative',
-        message: msg
+        message: msg || fallbackMessage
       })
     },
 

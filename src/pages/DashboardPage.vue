@@ -67,10 +67,19 @@
           </div>
           <div class="row items-center">
             <div class="col text-caption text-grey-7">
-              Saldo saat ini
+              Saldo kas/bank
             </div>
             <div class="col-auto text-body2 text-weight-medium text-primary">
-              {{ formatCurrency(totalBalance) }}
+              {{ formatCurrency(cashBankBalance) }}
+            </div>
+          </div>
+
+          <div class="row items-center q-mt-xs">
+            <div class="col text-caption text-grey-7">
+              Hutang CC/Paylater
+            </div>
+            <div class="col-auto text-body2 text-weight-medium text-negative">
+              {{ formatCurrency(ccPaylaterDebt) }}
             </div>
           </div>
         </q-card>
@@ -83,7 +92,7 @@
             <q-btn
               unelevated
               color="primary"
-              class="full-width cta-btn"
+              class="full-width cta-btn cta-btn--small-label"
               icon="edit"
               label="Catat Keuangan"
               @click="go('transactions')"
@@ -194,8 +203,15 @@
           </div>
 
           <div class="text-right text-caption q-mt-sm">
-            Total: <b>{{ formatCurrency(totalBalance) }}</b>
+            Total kas/bank: <b>{{ formatCurrency(cashBankBalance) }}</b>
           </div>
+          <div class="text-right text-caption text-grey-7">
+            Hutang CC/Paylater: <b class="text-negative">{{ formatCurrency(ccPaylaterDebt) }}</b>
+          </div>
+          <div class="text-right text-caption text-grey-7">
+            Total semua akun (termasuk kartu kredit/paylater): <b>{{ formatCurrency(totalBalanceAll) }}</b>
+          </div>
+
         </q-card-section>
       </q-card>
 
@@ -335,7 +351,10 @@ export default {
         net: 0
       },
       accounts: [],
-      totalBalance: 0,
+      totalBalanceLiquid: 0,
+      totalBalanceAll: 0,
+      cashBankBalanceValue: null,
+      ccPaylaterDebtValue: null,
       // tiap menu punya warna soft sendiri
       mainMenu: [
         {
@@ -391,6 +410,33 @@ export default {
     this.loadSummary()
     this.loadCharts()
   },
+  computed: {
+    // sesuai revisi blueprint: saldo kas/bank (tanpa ewallet)
+    cashBankBalance () {
+      if (this.cashBankBalanceValue !== null && this.cashBankBalanceValue !== undefined) {
+        return Number(this.cashBankBalanceValue || 0)
+      }
+      const allowed = ['bank', 'cash']
+      return (this.accounts || []).reduce((sum, a) => {
+        if (!allowed.includes(a.type)) return sum
+        return sum + Number(a.balance || 0)
+      }, 0)
+    },
+
+    // hutang kartu kredit/paylater (nilai positif)
+    ccPaylaterDebt () {
+      if (this.ccPaylaterDebtValue !== null && this.ccPaylaterDebtValue !== undefined) {
+        return Number(this.ccPaylaterDebtValue || 0)
+      }
+      const debtTypes = ['credit_card', 'paylater']
+      const bal = (this.accounts || []).reduce((sum, a) => {
+        if (!debtTypes.includes(a.type)) return sum
+        return sum + Number(a.balance || 0)
+      }, 0)
+      return bal < 0 ? Math.abs(bal) : 0
+    }
+  },
+
   beforeUnmount () {
     if (this.expenseChart) {
       this.expenseChart.destroy()
@@ -410,7 +456,12 @@ export default {
         const { data } = await api.get('/dashboard/summary', { params })
 
         this.accounts = data.accounts || []
-        this.totalBalance = data.total_balance || 0
+        this.totalBalanceLiquid = Number(data.total_balance || 0)
+        this.totalBalanceAll = Number(data.total_balance_all || 0)
+        this.cashBankBalanceValue = (data.cash_bank_balance !== undefined) ? Number(data.cash_bank_balance || 0) : null
+        this.ccPaylaterDebtValue = (data.cc_paylater_debt !== undefined)
+          ? Number(data.cc_paylater_debt || 0)
+          : Number(data?.liabilities?.outstanding || 0)
         this.period.year = data.period?.year || this.period.year
         this.period.month = data.period?.month || this.period.month
         this.summary = data.summary || this.summary
@@ -642,6 +693,18 @@ export default {
 /* TOMBOL CTA BULAT PANJANG */
 .cta-btn {
   border-radius: 999px;
+}
+
+/* kecilkan tulisan label tombol CTA tertentu (tanpa mengubah ukuran tombol) */
+.cta-btn--small-label :deep(.q-btn__content .block) {
+  font-size: 12px;
+  line-height: 1.1;
+}
+
+@media (max-width: 360px) {
+  .cta-btn--small-label :deep(.q-btn__content .block) {
+    font-size: 11px;
+  }
 }
 
 /* TOMBOL MENU BULAT – warna diatur dari :style */

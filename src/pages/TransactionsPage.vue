@@ -14,17 +14,18 @@
           dense
           round
           icon="refresh"
-          :loading="loadingList"
-          @click="loadTransactions"
+          @click="refreshAll"
+          :loading="loading"
         />
       </div>
     </div>
 
-    <!-- Tabs: Transaksi / Transfer -->
-    <q-card class="q-mb-md rounded-card">
+    <!-- Form card -->
+    <q-card class="rounded-card q-mb-md">
       <q-tabs
         v-model="activeTab"
         dense
+        class="text-grey-7"
         align="justify"
         indicator-color="primary"
         active-color="primary"
@@ -40,39 +41,39 @@
         <q-tab-panel name="transaction">
           <q-form @submit.prevent="submitTransaction" class="q-gutter-md">
             <div class="row q-col-gutter-md">
-              <div class="col-12 col-md-6">
+              <div class="col-12 col-md-4">
                 <q-select
                   v-model="form.account_id"
                   :options="accountOptions"
                   label="Akun"
-                  outlined
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
                 />
               </div>
 
-              <div class="col-6 col-md-3">
+              <div class="col-12 col-md-4">
                 <q-select
                   v-model="form.direction"
                   :options="directionOptions"
-                  label="Tipe"
-                  outlined
+                  label="Jenis"
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
                 />
               </div>
 
-              <div class="col-6 col-md-3">
+              <div class="col-12 col-md-4">
                 <q-select
                   v-model="form.scope"
                   :options="scopeOptions"
                   label="Scope"
-                  outlined
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
@@ -82,62 +83,59 @@
               <div class="col-12 col-md-6">
                 <q-select
                   v-model="form.category_id"
-                  :options="categoryOptions"
+                  :options="categoryOptionsByDirection"
                   label="Kategori"
-                  outlined
                   dense
+                  filled
                   emit-value
                   map-options
-                  :disable="loading || categoryOptions.length === 0"
+                  :disable="loading"
                 />
               </div>
 
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-6">
                 <q-input
                   v-model.number="form.amount"
                   type="number"
                   label="Nominal"
-                  outlined
                   dense
+                  filled
                   :disable="loading"
-                >
-                  <template #prepend>
-                    <q-icon name="payments" />
-                  </template>
-                </q-input>
+                  min="0"
+                />
               </div>
 
-              <div class="col-12 col-md-3">
+              <div class="col-12 col-md-6">
                 <q-input
                   v-model="form.transacted_at"
                   type="datetime-local"
-                  label="Tanggal & jam"
-                  outlined
+                  label="Tanggal & Jam"
                   dense
+                  filled
                   :disable="loading"
                 />
               </div>
 
-              <div class="col-12">
+              <div class="col-12 col-md-6">
                 <q-input
                   v-model="form.description"
-                  type="textarea"
                   label="Catatan (opsional)"
-                  outlined
-                  autogrow
+                  dense
+                  filled
                   :disable="loading"
                 />
               </div>
+            </div>
 
-              <div class="col-12">
-                <q-btn
-                  type="submit"
-                  color="primary"
-                  unelevated
-                  label="Simpan Transaksi"
-                  :loading="loading"
-                />
-              </div>
+            <div class="row justify-end">
+              <q-btn
+                type="submit"
+                color="primary"
+                icon="save"
+                label="Simpan"
+                unelevated
+                :loading="loading"
+              />
             </div>
           </q-form>
         </q-tab-panel>
@@ -150,9 +148,9 @@
                 <q-select
                   v-model="transferForm.from_account_id"
                   :options="accountOptions"
-                  label="Dari akun"
-                  outlined
+                  label="Dari Akun"
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
@@ -163,9 +161,9 @@
                 <q-select
                   v-model="transferForm.to_account_id"
                   :options="accountOptions"
-                  label="Ke akun"
-                  outlined
+                  label="Ke Akun"
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
@@ -177,365 +175,343 @@
                   v-model="transferForm.scope"
                   :options="scopeOptions"
                   label="Scope"
-                  outlined
                   dense
+                  filled
                   emit-value
                   map-options
                   :disable="loading"
                 />
               </div>
 
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <q-input
                   v-model.number="transferForm.amount"
                   type="number"
-                  label="Nominal transfer"
-                  outlined
+                  label="Nominal Transfer"
                   dense
+                  filled
                   :disable="loading"
-                >
-                  <template #prepend>
-                    <q-icon name="payments" />
-                  </template>
-                </q-input>
-              </div>
-
-              <div class="col-12 col-md-4">
-                <q-input
-                  v-model="transferForm.transacted_at"
-                  type="datetime-local"
-                  label="Tanggal & jam"
-                  outlined
-                  dense
-                  :disable="loading"
+                  min="0"
                 />
               </div>
 
-              <div class="col-12 col-md-4">
+              <div class="col-12 col-md-6">
                 <q-input
-                  v-model="transferForm.description"
-                  label="Catatan (opsional)"
-                  outlined
+                  v-model="transferForm.transacted_at"
+                  type="datetime-local"
+                  label="Tanggal & Jam"
                   dense
+                  filled
                   :disable="loading"
                 />
               </div>
 
               <div class="col-12">
-                <q-btn
-                  type="submit"
-                  color="primary"
-                  unelevated
-                  label="Simpan Transfer"
-                  :loading="loading"
+                <q-input
+                  v-model="transferForm.description"
+                  label="Catatan (opsional)"
+                  dense
+                  filled
+                  :disable="loading"
                 />
               </div>
+            </div>
+
+            <div class="row justify-end">
+              <q-btn
+                type="submit"
+                color="primary"
+                icon="swap_horiz"
+                label="Transfer"
+                unelevated
+                :loading="loading"
+              />
             </div>
           </q-form>
         </q-tab-panel>
       </q-tab-panels>
     </q-card>
 
-    <!-- Filter & Daftar Transaksi -->
+    <!-- Filter & list -->
     <q-card class="rounded-card">
-      <q-card-section>
-        <div class="row items-center q-mb-sm">
-          <div class="col">
-            <div class="text-subtitle1">Riwayat Transaksi</div>
-            <div class="text-caption text-grey-7">
-              Filter transaksi berdasarkan akun, tipe, scope, dan tanggal
-            </div>
-          </div>
+      <q-card-section class="q-pb-sm">
+        <div class="text-subtitle1 text-weight-medium">Riwayat Transaksi</div>
+        <div class="text-caption text-grey-7">
+          Filter transaksi berdasarkan akun, tipe, scope, dan tanggal
         </div>
 
-        <!-- Filter -->
-        <div class="row q-col-gutter-sm q-mb-sm">
-          <div class="col-12 col-md-3">
+        <!-- Filters (mobile-first, seperti contoh gambar) -->
+        <div class="row q-col-gutter-sm q-mt-sm">
+          <div class="col-12">
             <q-select
               v-model="filters.account_id"
-              :options="[{ label: 'Semua akun', value: null }, ...accountOptions]"
+              :options="accountFilterOptionsAll"
               label="Akun"
-              outlined
               dense
+              outlined
               emit-value
               map-options
               clearable
+              :disable="loadingList"
+              class="tx-filter-field"
             />
           </div>
 
-          <div class="col-6 col-md-2">
+          <div class="col-6">
             <q-select
               v-model="filters.direction"
-              :options="[
-                { label: 'Semua', value: null },
-                ...directionOptions
-              ]"
+              :options="directionFilterOptionsAll"
               label="Tipe"
-              outlined
               dense
+              outlined
               emit-value
               map-options
               clearable
+              :disable="loadingList"
+              class="tx-filter-field"
             />
           </div>
 
-          <div class="col-6 col-md-2">
+          <div class="col-6">
             <q-select
               v-model="filters.scope"
-              :options="[
-                { label: 'Semua', value: null },
-                ...scopeOptions
-              ]"
+              :options="scopeFilterOptionsAll"
               label="Scope"
-              outlined
               dense
+              outlined
               emit-value
               map-options
               clearable
+              :disable="loadingList"
+              class="tx-filter-field"
             />
           </div>
 
-          <div class="col-6 col-md-2">
+          <div class="col-6">
             <q-input
               v-model="filters.date_from"
               type="date"
               label="Dari tanggal"
-              outlined
               dense
+              outlined
+              :disable="loadingList"
+              class="tx-filter-field"
             />
           </div>
 
-          <div class="col-6 col-md-2">
+          <div class="col-6">
             <q-input
               v-model="filters.date_to"
               type="date"
               label="Sampai tanggal"
-              outlined
               dense
+              outlined
+              :disable="loadingList"
+              class="tx-filter-field"
             />
           </div>
 
-          <div class="col-12 col-md-3 q-mt-sm q-mt-md-none">
-            <div class="row items-center">
-              <div class="col">
-                <q-select
-                  v-model="filters.category_id"
-                  :options="[{ label: 'Semua kategori', value: null }, ...categoryFilterOptions]"
-                  label="Kategori"
-                  outlined
-                  dense
-                  emit-value
-                  map-options
-                  clearable
-                />
-              </div>
-              <div class="col-auto q-pl-xs">
-                <q-btn
-                  flat
-                  round
-                  dense
-                  icon="filter_alt"
-                  :loading="loadingList"
-                  @click="loadTransactions"
-                />
-              </div>
-              <div class="col-auto">
-                <q-btn
-                  flat
-                  dense
-                  label="Reset"
-                  @click="resetFilters"
-                />
-              </div>
-            </div>
+          <div class="col-9">
+            <q-select
+              v-model="filters.category_id"
+              :options="categoryFilterOptionsAll"
+              label="Kategori"
+              dense
+              outlined
+              emit-value
+              map-options
+              clearable
+              :disable="loadingList"
+              class="tx-filter-field"
+            />
+          </div>
+
+          <div class="col-3 flex items-center justify-end">
+            <q-btn
+              flat
+              dense
+              no-caps
+              icon="restart_alt"
+              label="RESET"
+              class="tx-reset-btn"
+              :disable="loadingList"
+              @click="resetFilters"
+            />
           </div>
         </div>
+      </q-card-section>
 
-        <q-separator class="q-my-sm" />
+      <q-separator />
 
-        <!-- List transaksi -->
-        <q-list v-if="transactions.length" separator>
-          <q-item v-for="tx in transactions" :key="tx.id">
-            <q-item-section avatar>
+      <!-- List (gaya seperti contoh gambar) -->
+      <q-card-section class="q-pt-sm">
+        <q-list separator>
+          <q-item
+            v-for="tx in transactions"
+            :key="tx.id"
+            class="tx-item"
+          >
+            <q-item-section avatar top>
               <q-avatar
-                size="36px"
-                :color="avatarColor(tx)"
+                size="42px"
                 text-color="white"
+                :class="txAvatarClass(tx)"
               >
-                <q-icon :name="avatarIcon(tx)" />
+                <q-icon :name="txIconName(tx)" />
               </q-avatar>
             </q-item-section>
 
             <q-item-section>
-              <q-item-label>
-                {{ tx.description || defaultDescription(tx) }}
+              <q-item-label class="text-weight-medium tx-title">
+                {{ txTitle(tx) }}
               </q-item-label>
-              <q-item-label caption>
-                {{ accountName(tx) }} •
-                {{ categoryName(tx) }} •
-                {{ formatDate(tx.transacted_at) }}
+              <q-item-label caption class="tx-sub">
+                {{ txAccountAndCategory(tx) }}
               </q-item-label>
-              <q-item-label caption>
-                {{ directionLabel(tx.direction) }} •
-                {{ scopeLabel(tx.scope) }}
+              <q-item-label caption class="tx-sub">
+                {{ txOwnerAndDate(tx) }}
+              </q-item-label>
+              <q-item-label caption class="tx-sub text-grey-7">
+                {{ directionLabel(tx.direction, tx.transaction_type) }} • {{ scopeLabel(tx.scope) }}
               </q-item-label>
             </q-item-section>
 
-            <q-item-section side top>
-              <div class="text-right">
-                <div
-                  class="text-weight-bold"
-                  :class="tx.direction === 'income' ? 'text-positive' : 'text-negative'"
-                >
-                  {{ formatCurrency(tx.amount) }}
-                </div>
-                <div class="q-mt-xs">
-                  <q-btn
-                    v-if="canEdit(tx)"
-                    dense
-                    flat
-                    round
-                    icon="edit"
-                    @click="openEdit(tx)"
-                  />
-                  <q-btn
-                    v-if="canDelete(tx)"
-                    dense
-                    flat
-                    round
-                    icon="delete"
-                    color="negative"
-                    @click="confirmDelete(tx)"
-                  />
-                </div>
+            <q-item-section side top class="tx-right">
+              <div class="text-weight-bold" :class="txAmountClass(tx)">
+                {{ formatCurrency(tx.amount) }}
+              </div>
+
+              <div
+                v-if="tx.transaction_type !== 'transfer'"
+                class="row no-wrap items-center justify-end q-mt-xs"
+              >
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="edit"
+                  size="sm"
+                  @click.stop="openEdit(tx)"
+                />
+                <q-btn
+                  flat
+                  dense
+                  round
+                  icon="delete"
+                  color="negative"
+                  size="sm"
+                  @click.stop="deleteTransaction(tx)"
+                />
               </div>
             </q-item-section>
           </q-item>
         </q-list>
 
-        <div v-else class="text-grey text-center q-my-md">
-          Belum ada transaksi untuk filter ini.
+        <div v-if="!loadingList && !transactions.length" class="text-caption text-grey-7 text-center q-my-md">
+          Tidak ada transaksi yang cocok dengan filter.
+        </div>
+
+        <div v-if="totalPages > 1" class="row justify-center q-mt-md">
+          <q-pagination
+            v-model="pagination.page"
+            :max="totalPages"
+            max-pages="6"
+            boundary-numbers
+            direction-links
+            @update:model-value="loadTransactions"
+          />
         </div>
       </q-card-section>
     </q-card>
 
-    <!-- Dialog EDIT transaksi -->
+    <!-- Edit dialog -->
     <q-dialog v-model="editDialog">
-      <q-card class="rounded-card" style="min-width: 320px; max-width: 480px;">
+      <q-card style="min-width: 320px; max-width: 520px;">
         <q-card-section>
-          <div class="text-subtitle1">
-            Edit Transaksi
-          </div>
+          <div class="text-h6">Edit Transaksi</div>
           <div class="text-caption text-grey-7">
-            Hanya transaksi normal yang tidak terhubung ke tagihan/transfer yang bisa diedit
+            Perbarui data transaksi (tidak untuk transfer)
           </div>
         </q-card-section>
+
+        <q-separator />
 
         <q-card-section class="q-gutter-md">
           <q-select
             v-model="editForm.account_id"
             :options="accountOptions"
             label="Akun"
-            outlined
             dense
+            filled
             emit-value
             map-options
           />
+
           <q-select
             v-model="editForm.direction"
             :options="directionOptions"
-            label="Tipe"
-            outlined
+            label="Jenis"
             dense
+            filled
             emit-value
             map-options
           />
+
           <q-select
             v-model="editForm.scope"
             :options="scopeOptions"
             label="Scope"
-            outlined
             dense
+            filled
             emit-value
             map-options
           />
+
           <q-select
             v-model="editForm.category_id"
-            :options="editCategoryOptions"
+            :options="editCategoryOptionsByDirection"
             label="Kategori"
-            outlined
             dense
+            filled
             emit-value
             map-options
           />
+
           <q-input
             v-model.number="editForm.amount"
             type="number"
             label="Nominal"
-            outlined
             dense
-          >
-            <template #prepend>
-              <q-icon name="payments" />
-            </template>
-          </q-input>
+            filled
+            min="0"
+          />
+
           <q-input
             v-model="editForm.transacted_at"
             type="datetime-local"
-            label="Tanggal & jam"
-            outlined
+            label="Tanggal & Jam"
             dense
+            filled
           />
+
           <q-input
             v-model="editForm.description"
-            type="textarea"
-            label="Catatan"
-            outlined
-            autogrow
+            label="Catatan (opsional)"
+            dense
+            filled
           />
         </q-card-section>
 
+        <q-separator />
+
         <q-card-actions align="right">
+          <q-btn flat label="Batal" v-close-popup />
           <q-btn
-            flat
-            label="Batal"
-            v-close-popup
-            :disable="editLoading"
-          />
-          <q-btn
-            label="Simpan"
             color="primary"
-            :loading="editLoading"
+            label="Simpan"
+            unelevated
+            :loading="loading"
             @click="submitEdit"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-
-    <!-- Dialog DELETE transaksi -->
-    <q-dialog v-model="deleteDialog">
-      <q-card class="rounded-card" style="min-width: 320px;">
-        <q-card-section>
-          <div class="text-subtitle1">Hapus Transaksi</div>
-          <div class="text-body2 q-mt-sm">
-            Yakin ingin menghapus transaksi
-            <b>{{ selectedTx?.description || defaultDescription(selectedTx) }}</b>?
-            <br>
-            Hanya transaksi normal yang tidak terhubung ke tagihan/transfer yang bisa dihapus.
-          </div>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn
-            flat
-            label="Batal"
-            v-close-popup
-            :disable="deleteLoading"
-          />
-          <q-btn
-            label="Hapus"
-            color="negative"
-            :loading="deleteLoading"
-            @click="deleteTransaction"
           />
         </q-card-actions>
       </q-card>
@@ -545,7 +521,7 @@
 
 <script>
 import { api } from 'boot/axios'
-import { Notify } from 'quasar'
+import { Notify, debounce } from 'quasar'
 
 export default {
   name: 'TransactionsPage',
@@ -557,6 +533,7 @@ export default {
       transactions: [],
       accounts: [],
       accountsById: {},
+      balancesById: {},
       accountOptions: [],
       categoriesIncome: [],
       categoriesExpense: [],
@@ -586,20 +563,27 @@ export default {
         date_from: '',
         date_to: ''
       },
-      directionOptions: [
-        { label: 'Pengeluaran', value: 'expense' },
-        { label: 'Pemasukan', value: 'income' }
+      debouncedApplyFilters: null,
+      pagination: {
+        sortBy: 'transacted_at',
+        descending: true,
+        page: 1,
+        rowsPerPage: 10,
+        rowsNumber: 0
+      },
+      columns: [
+        { name: 'transacted_at', label: 'Tanggal', field: 'transacted_at', align: 'left', sortable: true },
+        { name: 'account', label: 'Akun', field: row => row.account_name || '-', align: 'left' },
+        { name: 'type', label: 'Jenis', field: row => this.directionLabel(row.direction, row.transaction_type), align: 'left' },
+        { name: 'scope', label: 'Scope', field: row => this.scopeLabel(row.scope), align: 'left' },
+        { name: 'category', label: 'Kategori', field: row => row.category_name || '-', align: 'left' },
+        { name: 'amount', label: 'Nominal', field: 'amount', align: 'right', sortable: true },
+        { name: 'description', label: 'Catatan', field: row => row.description || this.defaultDescription(row), align: 'left' },
+        { name: 'actions', label: '', field: 'actions', align: 'right' }
       ],
-      scopeOptions: [
-        { label: 'Keluarga', value: 'family' },
-        { label: 'Pribadi', value: 'personal' }
-      ],
-
-      // edit / delete
       editDialog: false,
-      editLoading: false,
+      editId: null,
       editForm: {
-        id: null,
         account_id: null,
         direction: 'expense',
         scope: 'family',
@@ -607,22 +591,50 @@ export default {
         amount: null,
         transacted_at: '',
         description: ''
-      },
-      deleteDialog: false,
-      deleteLoading: false,
-      selectedTx: null
+      }
     }
   },
-  computed: {
-    categoryOptions () {
-      const list = this.form.direction === 'income'
-        ? this.categoriesIncome
-        : this.categoriesExpense
 
-      return list.map(cat => ({
-        label: cat.name,
-        value: cat.id
+  computed: {
+    directionOptions () {
+      return [
+        { label: 'Pengeluaran', value: 'expense' },
+        { label: 'Pemasukan', value: 'income' }
+      ]
+    },
+    directionFilterOptions () {
+      return [
+        { label: 'Pemasukan', value: 'income' },
+        { label: 'Pengeluaran', value: 'expense' },
+        { label: 'Transfer', value: 'transfer' }
+      ]
+    },
+    scopeOptions () {
+      return [
+        { label: 'Keluarga', value: 'family' },
+        { label: 'Pribadi', value: 'personal' }
+      ]
+    },
+    categoryOptionsByDirection () {
+      if (this.form.direction === 'income') {
+        return this.categoriesIncome.map(cat => ({ label: cat.name, value: cat.id }))
+      }
+      return this.categoriesExpense.map(cat => ({ label: cat.name, value: cat.id }))
+    },
+    editCategoryOptionsByDirection () {
+      if (this.editForm.direction === 'income') {
+        return this.categoriesIncome.map(cat => ({ label: cat.name, value: cat.id }))
+      }
+      return this.categoriesExpense.map(cat => ({ label: cat.name, value: cat.id }))
+    },
+    accountFilterOptions () {
+      return this.accounts.map(acc => ({
+        label: acc.name,
+        value: acc.id
       }))
+    },
+    accountFilterOptionsAll () {
+      return [{ label: 'Semua akun', value: null }, ...this.accountFilterOptions]
     },
     categoryFilterOptions () {
       const list = [
@@ -634,23 +646,96 @@ export default {
         value: cat.id
       }))
     },
-    editCategoryOptions () {
-      const dir = this.editForm.direction
-      const list = dir === 'income'
-        ? this.categoriesIncome
-        : this.categoriesExpense
-
-      return list.map(cat => ({
-        label: cat.name,
-        value: cat.id
-      }))
+    categoryFilterOptionsAll () {
+      return [{ label: 'Semua kategori', value: null }, ...this.categoryFilterOptions]
+    },
+    directionFilterOptionsAll () {
+      return [{ label: 'Semua', value: null }, ...this.directionFilterOptions]
+    },
+    scopeFilterOptionsAll () {
+      return [{ label: 'Semua', value: null }, ...this.scopeOptions]
+    },
+    totalPages () {
+      const total = Number(this.pagination.rowsNumber || 0)
+      const per = Number(this.pagination.rowsPerPage || 10)
+      if (!total || !per) return 1
+      return Math.max(1, Math.ceil(total / per))
     }
   },
+
   created () {
+    this.debouncedApplyFilters = debounce(() => {
+      this.applyFilters()
+    }, 250)
     this.loadMasterData()
     this.loadTransactions()
   },
+
+  watch: {
+    filters: {
+      deep: true,
+      handler () {
+        // auto apply seperti contoh UI (tanpa tombol "Terapkan")
+        if (this.debouncedApplyFilters) this.debouncedApplyFilters()
+      }
+    }
+  },
+
   methods: {
+    // ===== UI helpers untuk list transaksi (gaya mobile) =====
+    txTitle (tx) {
+      if (!tx) return '-'
+      return (tx.description && String(tx.description).trim()) ? tx.description : (this.defaultDescription(tx) || '-')
+    },
+    txAccountAndCategory (tx) {
+      if (!tx) return ''
+      const acc = tx.account_name || this.accountsById?.[tx.account_id]?.name || '-'
+      let cat = tx.category_name || ''
+      if (tx.transaction_type === 'transfer' || tx.direction === 'transfer') cat = 'Transfer'
+      if (!cat) cat = '-'
+      return `${acc} • ${cat}`
+    },
+    txOwnerAndDate (tx) {
+      if (!tx) return ''
+      const owner = tx.owner_name || tx.account_owner_name || this.accountsById?.[tx.account_id]?.owner_name || ''
+      const date = this.formatDateOnly(tx.transacted_at)
+      if (owner && date) return `${owner} • ${date}`
+      return owner || date || ''
+    },
+    formatDateOnly (val) {
+      if (!val) return ''
+      const d = new Date(val)
+      if (Number.isNaN(d.getTime())) {
+        // fallback: coba ambil YYYY-MM-DD dari string
+        return String(val).slice(0, 10)
+      }
+      const y = d.getFullYear()
+      const m = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      return `${y}-${m}-${day}`
+    },
+    txIconName (tx) {
+      if (!tx) return 'receipt_long'
+      if (tx.transaction_type === 'transfer' || tx.direction === 'transfer') return 'swap_horiz'
+      if (tx.direction === 'income') return 'south'
+      if (tx.direction === 'expense') return 'north'
+      return 'receipt_long'
+    },
+    txAvatarClass (tx) {
+      if (!tx) return 'bg-grey-6'
+      if (tx.transaction_type === 'transfer' || tx.direction === 'transfer') return 'bg-primary'
+      if (tx.direction === 'income') return 'bg-positive'
+      if (tx.direction === 'expense') return 'bg-negative'
+      return 'bg-grey-6'
+    },
+    txAmountClass (tx) {
+      if (!tx) return 'text-grey-8'
+      if (tx.transaction_type === 'transfer' || tx.direction === 'transfer') return 'text-primary'
+      if (tx.direction === 'income') return 'text-positive'
+      if (tx.direction === 'expense') return 'text-negative'
+      return 'text-grey-8'
+    },
+
     async loadMasterData () {
       this.loading = true
       try {
@@ -681,10 +766,11 @@ export default {
           this.categoriesById[cat.id] = cat
         }
 
+        await this.refreshBalances()
+
         if (!this.form.account_id && this.accountOptions.length > 0) {
           this.form.account_id = this.accountOptions[0].value
         }
-
         if (!this.transferForm.from_account_id && this.accountOptions.length > 0) {
           this.transferForm.from_account_id = this.accountOptions[0].value
         }
@@ -711,14 +797,36 @@ export default {
         if (this.filters.date_from) params.date_from = this.filters.date_from
         if (this.filters.date_to) params.date_to = this.filters.date_to
 
-        const txRes = await api.get('/transactions', { params })
-        this.transactions = txRes.data.data || txRes.data || []
+        params.page = this.pagination.page
+        params.per_page = this.pagination.rowsPerPage
+        params.sort_by = this.pagination.sortBy
+        params.sort_dir = this.pagination.descending ? 'desc' : 'asc'
+
+        const res = await api.get('/transactions', { params })
+        const payload = res.data.data || res.data || {}
+
+        this.transactions = payload.data || payload || []
+        this.pagination.rowsNumber = payload.total || payload.meta?.total || this.transactions.length
       } catch (err) {
         console.error(err)
-        this.handleError(err, 'Gagal memuat transaksi')
+        this.handleError(err, 'Gagal memuat daftar transaksi')
       } finally {
         this.loadingList = false
       }
+    },
+
+    onTableRequest (props) {
+      const { page, rowsPerPage, sortBy, descending } = props.pagination
+      this.pagination.page = page
+      this.pagination.rowsPerPage = rowsPerPage
+      this.pagination.sortBy = sortBy
+      this.pagination.descending = descending
+      this.loadTransactions()
+    },
+
+    applyFilters () {
+      this.pagination.page = 1
+      this.loadTransactions()
     },
 
     resetFilters () {
@@ -733,6 +841,52 @@ export default {
       this.loadTransactions()
     },
 
+    async refreshBalances () {
+      try {
+        const res = await api.get('/dashboard/summary')
+        const payload = res?.data?.data ?? res?.data ?? {}
+        const accounts = payload.accounts || []
+        const map = {}
+        accounts.forEach(a => {
+          map[a.id] = a.balance
+        })
+        this.balancesById = map
+      } catch (err) {
+        // kalau gagal ambil saldo, jangan matikan halaman
+        console.error(err)
+      }
+    },
+
+    async validateSaldoSumber (accountId, amount, actionLabel = 'transaksi') {
+      const acc = this.accountsById[accountId]
+      if (!acc) return true
+
+      // Validasi hanya untuk Rekening (bank) & Cash
+      const restricted = acc.type === 'bank' || acc.type === 'cash'
+      if (!restricted) return true
+
+      // Pastikan saldo tersedia (kalau belum ada, coba ambil dari dashboard summary)
+      if (!this.balancesById || this.balancesById[accountId] === undefined) {
+        await this.refreshBalances()
+      }
+
+      // fallback: kalau endpoint summary tidak tersedia, pakai balance dari /accounts
+      const balance = Number((this.balancesById && this.balancesById[accountId] !== undefined)
+        ? this.balancesById[accountId]
+        : (acc.balance ?? 0))
+
+      // Syarat: saldo "kosong" = 0 / tidak valid
+      if (!Number.isFinite(balance) || balance === 0) {
+        Notify.create({
+          type: 'warning',
+          message: `Saldo akun Rekening/Cash masih kosong (Rp 0). Isi saldo dulu di menu Akun sebelum melakukan ${actionLabel}.`
+        })
+        return false
+      }
+
+      return true
+    },
+
     async submitTransaction () {
       if (!this.form.account_id || !this.form.amount || !this.form.category_id) {
         Notify.create({
@@ -742,6 +896,21 @@ export default {
         return
       }
 
+      const amt = Number(this.form.amount || 0)
+      if (amt <= 0) {
+        Notify.create({
+          type: 'warning',
+          message: 'Nominal harus lebih dari 0'
+        })
+        return
+      }
+
+      // VALIDASI: hanya untuk pengeluaran dari rekening/cash dengan saldo 0
+      if (this.form.direction === 'expense') {
+        const ok = await this.validateSaldoSumber(this.form.account_id, amt, 'pengeluaran')
+        if (!ok) return
+      }
+
       this.loading = true
       try {
         const payload = {
@@ -749,7 +918,7 @@ export default {
           direction: this.form.direction,
           scope: this.form.scope,
           category_id: this.form.category_id,
-          amount: this.form.amount,
+          amount: amt,
           transacted_at: this.form.transacted_at || undefined,
           description: this.form.description || undefined
         }
@@ -761,11 +930,11 @@ export default {
           message: 'Transaksi berhasil disimpan'
         })
 
-        // reset sebagian form
         this.form.amount = null
         this.form.description = ''
         this.form.transacted_at = ''
 
+        await this.refreshBalances()
         this.loadTransactions()
       } catch (err) {
         console.error(err)
@@ -792,7 +961,8 @@ export default {
         return
       }
 
-      if (!this.transferForm.amount || this.transferForm.amount <= 0) {
+      const amt = Number(this.transferForm.amount || 0)
+      if (amt <= 0) {
         Notify.create({
           type: 'warning',
           message: 'Nominal transfer harus lebih dari 0'
@@ -800,12 +970,16 @@ export default {
         return
       }
 
+      // VALIDASI: sumber transfer rekening/cash dengan saldo 0 => blok
+      const ok = await this.validateSaldoSumber(this.transferForm.from_account_id, amt, 'transfer')
+      if (!ok) return
+
       this.loading = true
       try {
         const payload = {
           from_account_id: this.transferForm.from_account_id,
           to_account_id: this.transferForm.to_account_id,
-          amount: this.transferForm.amount,
+          amount: amt,
           scope: this.transferForm.scope,
           transacted_at: this.transferForm.transacted_at || undefined,
           description: this.transferForm.description || undefined
@@ -818,11 +992,11 @@ export default {
           message: 'Transfer berhasil disimpan'
         })
 
-        // reset sebagian
         this.transferForm.amount = null
         this.transferForm.description = ''
         this.transferForm.transacted_at = ''
 
+        await this.refreshBalances()
         this.loadTransactions()
       } catch (err) {
         console.error(err)
@@ -832,40 +1006,31 @@ export default {
       }
     },
 
-    // ==== EDIT / DELETE ====
-
-    canEdit (tx) {
-      return tx && tx.transaction_type === 'normal' && !tx.bill_id && !tx.transfer_group_id
-    },
-
-    canDelete (tx) {
-      return this.canEdit(tx)
-    },
-
-    openEdit (tx) {
-      if (!this.canEdit(tx)) {
+    openEdit (row) {
+      if (row.transaction_type === 'transfer') {
         Notify.create({
           type: 'warning',
-          message: 'Hanya transaksi normal yang tidak terhubung ke tagihan/transfer yang bisa diedit'
+          message: 'Transfer tidak bisa diedit. Silakan hapus lalu buat ulang.'
         })
         return
       }
 
+      this.editId = row.id
       this.editForm = {
-        id: tx.id,
-        account_id: tx.account_id,
-        direction: tx.direction,
-        scope: tx.scope || 'family',
-        category_id: tx.category_id,
-        amount: tx.amount,
-        transacted_at: this.toDateTimeLocal(tx.transacted_at),
-        description: tx.description || ''
+        account_id: row.account_id,
+        direction: row.direction,
+        scope: row.scope,
+        category_id: row.category_id,
+        amount: row.amount,
+        transacted_at: this.toDatetimeLocal(row.transacted_at),
+        description: row.description || ''
       }
-
       this.editDialog = true
     },
 
     async submitEdit () {
+      if (!this.editId) return
+
       if (!this.editForm.account_id || !this.editForm.amount || !this.editForm.category_id) {
         Notify.create({
           type: 'warning',
@@ -874,72 +1039,75 @@ export default {
         return
       }
 
-      this.editLoading = true
+      const amt = Number(this.editForm.amount || 0)
+      if (amt <= 0) {
+        Notify.create({
+          type: 'warning',
+          message: 'Nominal harus lebih dari 0'
+        })
+        return
+      }
+
+      // VALIDASI: saat edit pengeluaran juga dicek
+      if (this.editForm.direction === 'expense') {
+        const ok = await this.validateSaldoSumber(this.editForm.account_id, amt, 'pengeluaran')
+        if (!ok) return
+      }
+
+      this.loading = true
       try {
         const payload = {
           account_id: this.editForm.account_id,
           direction: this.editForm.direction,
           scope: this.editForm.scope,
           category_id: this.editForm.category_id,
-          amount: this.editForm.amount,
+          amount: amt,
           transacted_at: this.editForm.transacted_at || undefined,
           description: this.editForm.description || undefined
         }
 
-        await api.put(`/transactions/${this.editForm.id}`, payload)
+        await api.put(`/transactions/${this.editId}`, payload)
 
         Notify.create({
           type: 'positive',
-          message: 'Transaksi berhasil diupdate'
+          message: 'Transaksi berhasil diperbarui'
         })
 
         this.editDialog = false
+        this.editId = null
+
+        await this.refreshBalances()
         this.loadTransactions()
       } catch (err) {
         console.error(err)
-        this.handleError(err, 'Gagal mengupdate transaksi')
+        this.handleError(err, 'Gagal memperbarui transaksi')
       } finally {
-        this.editLoading = false
+        this.loading = false
       }
     },
 
-    confirmDelete (tx) {
-      if (!this.canDelete(tx)) {
-        Notify.create({
-          type: 'warning',
-          message: 'Hanya transaksi normal yang tidak terhubung ke tagihan/transfer yang bisa dihapus'
-        })
-        return
-      }
-
-      this.selectedTx = tx
-      this.deleteDialog = true
-    },
-
-    async deleteTransaction () {
-      if (!this.selectedTx) return
-
-      this.deleteLoading = true
+    async deleteTransaction (row) {
+      this.loading = true
       try {
-        await api.delete(`/transactions/${this.selectedTx.id}`)
-
+        await api.delete(`/transactions/${row.id}`)
         Notify.create({
           type: 'positive',
           message: 'Transaksi berhasil dihapus'
         })
-
-        this.deleteDialog = false
-        this.selectedTx = null
+        await this.refreshBalances()
         this.loadTransactions()
       } catch (err) {
         console.error(err)
         this.handleError(err, 'Gagal menghapus transaksi')
       } finally {
-        this.deleteLoading = false
+        this.loading = false
       }
     },
 
-    // ==== UTIL ====
+    refreshAll () {
+      this.loadMasterData()
+      this.loadTransactions()
+    },
 
     handleError (err, fallbackMessage) {
       if (err?.response?.status === 401) {
@@ -950,46 +1118,14 @@ export default {
           message: 'Sesi habis, silakan login lagi'
         })
         this.$router.push({ name: 'login' })
-      } else {
-        const msg = err?.response?.data?.message || fallbackMessage
-        Notify.create({
-          type: 'negative',
-          message: msg
-        })
+        return
       }
-    },
 
-    accountName (tx) {
-      const acc = this.accountsById[tx.account_id]
-      return acc ? acc.name : `Akun #${tx.account_id}`
-    },
-
-    categoryName (tx) {
-      if (!tx.category_id) return 'Tanpa kategori'
-      const cat = this.categoriesById[tx.category_id]
-      return cat ? cat.name : `Kategori #${tx.category_id}`
-    },
-
-    directionLabel (direction) {
-      if (direction === 'income') return 'Pemasukan'
-      if (direction === 'expense') return 'Pengeluaran'
-      return direction || '-'
-    },
-
-    scopeLabel (scope) {
-      if (scope === 'family') return 'Keluarga'
-      if (scope === 'personal') return 'Pribadi'
-      return 'Tidak ditentukan'
-    },
-
-    avatarColor (tx) {
-      if (tx.transaction_type === 'transfer') return 'primary'
-      return tx.direction === 'income' ? 'positive' : 'negative'
-    },
-
-    avatarIcon (tx) {
-      if (tx.transaction_type === 'transfer') return 'swap_horiz'
-      return tx.direction === 'income' ? 'arrow_downward' : 'arrow_upward'
+      const msg = err?.response?.data?.message || fallbackMessage || 'Terjadi kesalahan'
+      Notify.create({
+        type: 'negative',
+        message: msg
+      })
     },
 
     formatCurrency (value) {
@@ -1001,23 +1137,23 @@ export default {
       })
     },
 
-    formatDate (value) {
-      if (!value) return '-'
-      const d = new Date(value)
-      if (Number.isNaN(d.getTime())) return value
-      const year = d.getFullYear()
-      const month = String(d.getMonth() + 1).padStart(2, '0')
-      const day = String(d.getDate()).padStart(2, '0')
-      return `${year}-${month}-${day}`
+    scopeLabel (scope) {
+      if (scope === 'family') return 'Keluarga'
+      if (scope === 'personal') return 'Pribadi'
+      return scope || '-'
     },
 
-    toDateTimeLocal (value) {
-      if (!value) return ''
-      const d = new Date(value)
-      if (Number.isNaN(d.getTime())) {
-        // fallback: kalau dari server sudah format "YYYY-MM-DD HH:MM:SS"
-        return String(value).replace(' ', 'T').slice(0, 16)
-      }
+    directionLabel (direction, transactionType) {
+      if (transactionType === 'transfer' || direction === 'transfer') return 'Transfer'
+      if (direction === 'income') return 'Pemasukan'
+      if (direction === 'expense') return 'Pengeluaran'
+      return direction || '-'
+    },
+
+    toDatetimeLocal (val) {
+      if (!val) return ''
+      const d = new Date(val)
+      if (Number.isNaN(d.getTime())) return ''
       const y = d.getFullYear()
       const m = String(d.getMonth() + 1).padStart(2, '0')
       const day = String(d.getDate()).padStart(2, '0')
@@ -1039,6 +1175,31 @@ export default {
 
 <style scoped>
 .rounded-card {
-  border-radius: 20px;
+  border-radius: 18px;
+}
+
+.tx-filter-field :deep(.q-field__control) {
+  border-radius: 12px;
+}
+
+.tx-reset-btn {
+  font-weight: 700;
+}
+
+.tx-item {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.tx-title {
+  line-height: 1.2;
+}
+
+.tx-sub {
+  line-height: 1.15;
+}
+
+.tx-right {
+  min-width: 132px;
 }
 </style>
